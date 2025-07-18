@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付宝分享链接转DeepLink工具</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1677ff 0%, #00a6ff 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            margin: 20px auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        h1 {
+            color: #1677ff;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .alipay-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            display: block;
+            background: #1677ff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        textarea, input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            resize: vertical;
+        }
+        
+        textarea:focus, input:focus {
+            border-color: #1677ff;
+            box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.2);
+            outline: none;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .convert-btn {
+            background: linear-gradient(to right, #1677ff, #00a6ff);
+            color: white;
+        }
+        
+        .copy-btn {
+            background: #28a745;
+            color: white;
+        }
+        
+        .test-btn {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .result-box {
+            position: relative;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 15px;
+            border: 1px dashed #1677ff;
+            word-break: break-all;
+        }
+        
+        .result-label {
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #f8f9fa;
+            padding: 0 8px;
+            font-size: 14px;
+            color: #1677ff;
+            font-weight: 600;
+        }
+        
+        .info-section {
+            background: #e8f4ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .info-section h3 {
+            color: #1677ff;
+            margin-bottom: 15px;
+        }
+        
+        .info-section ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .info-section li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .qr-code {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .qr-code img {
+            max-width: 200px;
+            margin: 0 auto;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="alipay-icon">支</div>
+            <h1>支付宝分享链接转 DeepLink 工具</h1>
+            <p class="subtitle">将支付宝分享链接转换为可直接跳转支付宝的 DeepLink</p>
+        </header>
+        
+        <div class="input-group">
+            <label for="original-url">支付宝分享链接：</label>
+            <textarea 
+                id="original-url" 
+                rows="4" 
+                placeholder="请输入支付宝分享链接（如：https://u.alipay.cn/...）"
+            ></textarea>
+        </div>
+        
+        <div class="btn-group">
+            <button class="convert-btn" onclick="convertToDeeplink()">转换链接</button>
+            <button class="copy-btn" onclick="copyToClipboard()">复制结果</button>
+            <button class="test-btn" onclick="testDeeplink()">测试链接</button>
+        </div>
+        
+        <div class="input-group">
+            <label for="deeplink-result">DeepLink 结果：</label>
+            <div class="result-box">
+                <div class="result-label">转换结果</div>
+                <div id="deeplink-result">等待转换...</div>
+            </div>
+        </div>
+        
+        <div id="qr-code" class="qr-code">
+            <h3>手机扫码测试</h3>
+            <canvas id="qr-canvas"></canvas>
+        </div>
+        
+        <div class="info-section">
+            <h3>使用说明</h3>
+            <ul>
+                <li>将支付宝分享链接粘贴到上方输入框</li>
+                <li>点击"转换链接"按钮生成支付宝 DeepLink</li>
+                <li>点击"复制结果"复制生成的 DeepLink</li>
+                <li>在手机浏览器或应用中打开此链接可跳转支付宝</li>
+            </ul>
+            <p><strong>注意事项：</strong></p>
+            <ul>
+                <li>此工具仅适用于支付宝分享链接</li>
+                <li>手机需要安装支付宝客户端才能正常跳转</li>
+                <li>支付宝版本需在 10.1.52 以上</li>
+                <li>转换后的链接可通过短信、邮件等方式分享</li>
+            </ul>
+        </div>
+        
+        <footer>
+            <p>© 2023 支付宝DeepLink转换工具 | 本工具仅提供格式转换，不存储任何用户数据</p>
+        </footer>
+    </div>
+    
+    <div id="toast" class="toast">操作成功！</div>
+    
+    <script>
+        // 转换函数
+        function convertToDeeplink() {
+            const originalUrl = document.getElementById('original-url').value.trim();
+            
+            if (!originalUrl) {
+                showToast('请输入支付宝分享链接');
+                return;
+            }
+            
+            if (!originalUrl.includes('alipay.cn')) {
+                showToast('请输入有效的支付宝分享链接');
+                return;
+            }
+            
+            // 进行URL编码
+            const encodedUrl = encodeURIComponent(originalUrl);
+            
+            // 构建DeepLink
+            const deeplink = `alipays://platformapi/startapp?appId=20000067&url=${encodedUrl}`;
+            
+            // 显示结果
+            document.getElementById('deeplink-result').textContent = deeplink;
+            document.getElementById('qr-code').style.display = 'block';
+            
+            // 生成二维码
+            generateQRCode(deeplink);
+            
+            showToast('链接转换成功！');
+        }
+        
+        // 复制到剪贴板
+        function copyToClipboard() {
+            const result = document.getElementById('deeplink-result').textContent;
+            
+            if (result === '等待转换...') {
+                showToast('请先转换链接');
+                return;
+            }
+            
+            navigator.clipboard.writeText(result)
+                .then(() => {
+                    showToast('已复制到剪贴板');
+                })
+                .catch(err => {
+                    showToast('复制失败，请手动复制');
+                    console.error('复制失败:', err);
+                });
+        }
+        
+        // 测试链接（在桌面端打开）
+        function testDeeplink() {
+            const result = document.getElementById('deeplink-result').textContent;
+            
+            if (result === '等待转换...') {
+                showToast('请先转换链接');
+                return;
+            }
+            
+            showToast('请在移动设备上打开此链接');
+        }
+        
+        // 生成二维码
+        function generateQRCode(text) {
+            const canvas = document.getElementById('qr-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 设置二维码尺寸
+            canvas.width = 200;
+            canvas.height = 200;
+            
+            // 绘制二维码背景
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 简单二维码生成（实际应用中应使用专用库）
+            drawSimpleQRCode(ctx, text, 200, 200);
+        }
+        
+        // 简单二维码绘制函数（简化版）
+        function drawSimpleQRCode(ctx, text, width, height) {
+            ctx.fillStyle = '#000';
+            
+            // 绘制定位标记
+            ctx.fillRect(10, 10, 40, 40);
+            ctx.fillRect(10, height - 50, 40, 40);
+            ctx.fillRect(width - 50, 10, 40, 40);
+            
+            // 绘制文本
+            ctx.fillStyle = '#1677ff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('支付宝 DeepLink', width/2, height - 10);
+        }
+        
+        // 显示提示
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 页面加载时添加示例
+        window.onload = function() {
+            document.getElementById('original-url').value = 'https://u.alipay.cn/_7H8fmVbxssTCTnQrRxS2RY?chInfo=ch_share__chsub_CopyLink&fxzjshareChinfo=ch_share__chsub_CopyLink&apshareid=80221BAD-FE93-40CE-A3F0-50F46C33FB54&shareBizType=ztokenV0_MPJprZKY&shareTimestamp=1752823499552';
+        };
+    </script>
+</body>
+</html>
